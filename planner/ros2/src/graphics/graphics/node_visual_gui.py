@@ -341,6 +341,7 @@ class VisualsNode(Thread, Node):
         bg_img = l_img.copy()
         y = pos[1] - s_img.shape[1] // 2
         x = pos[0] - s_img.shape[1] // 2
+
         # Extract the alpha mask of the RGBA image, convert to RGB
         b, g, r, a = cv2.split(s_img)
         overlay_color = cv2.merge((b, g, r))
@@ -351,10 +352,10 @@ class VisualsNode(Thread, Node):
         h, w, _ = overlay_color.shape
         roi = l_img[y : y + h, x : x + w]
 
-        # Black-out the area behind the logo in our original ROI
+        # Black-out the area behind the image in our original ROI
         img1_bg = cv2.bitwise_and(roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
 
-        # Mask out the logo from the logo image.
+        # Mask out the robot image from the robot image.
         img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
 
         # Update the original image with our new ROI
@@ -445,7 +446,15 @@ class VisualsNode(Thread, Node):
 
         # -----------------------------------------
         # Insert you solution here
-        pass
+
+        for pos in land_marks:
+            cv2.circle(
+                img=self._win_background,
+                center=tuple((pos.x, pos.y)),
+                radius=10,
+                color=(0, 0, 255),
+                thickness=2,
+            )
 
         # -----------------------------------------
 
