@@ -36,6 +36,8 @@ from usr_msgs.msg import Kiwibot
 from usr_srvs.srv import Move
 from usr_srvs.srv import Turn
 
+last_pos = 0
+
 # =============================================================================
 def setProcessName(name: str) -> None:
     """!
@@ -560,6 +562,41 @@ class PlannerNode(Node):
         # "t": [float](time for angle a),
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
+        printlog(dst)
+
+        delta_time = time / n
+        time_step = []
+        acum = 0.0
+
+        for i in range(int(n)):
+            time_step.append(acum)
+            acum += delta_time
+
+        pos = [0.0] * len(time_step)
+        vel = [0.0] * len(time_step)
+
+        vel_max = (pos[0] - dst) / (time - pt - delta_time)
+
+        for index in range(1, int(n)):
+            if index * delta_time <= pt:
+                vel[index] = vel_max / n * index
+                pos[index] = pos[index - 1] - delta_time * vel[index - 1]
+            elif index * delta_time > pt and index * delta_time < time - pt:
+                vel[index] = vel_max
+                pos[index] = pos[index - 1] - delta_time * vel[index]
+            elif index * delta_time > time - pt:
+                vel[index] = vel_max / n * index
+                pos[index] = pos[index - 1] - delta_time * vel[index - 1]
+
+        for index in range(int(n)):
+            turn_points.append(
+                {
+                    "idx": index,
+                    "a": pos[index],
+                    "t": time_step[index],
+                    "dt": delta_time,
+                }
+            )
 
         # ---------------------------------------------------------------------
 
