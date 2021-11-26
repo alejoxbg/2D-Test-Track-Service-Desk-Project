@@ -562,7 +562,6 @@ class PlannerNode(Node):
         # "t": [float](time for angle a),
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
-        printlog(dst)
 
         delta_time = time / n
         time_step = []
