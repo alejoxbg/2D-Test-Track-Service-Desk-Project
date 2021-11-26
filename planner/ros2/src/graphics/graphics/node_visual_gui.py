@@ -14,6 +14,7 @@ import copy
 import sys
 import os
 
+
 from threading import Thread, Event
 
 from std_msgs.msg import Int32
@@ -27,6 +28,7 @@ from rclpy.node import Node
 
 from utils.python_utils import printlog
 from utils.python_utils import print_list_text
+from utils.python_utils import overlay_image
 
 from usr_msgs.msg import Planner as planner_msg
 from usr_msgs.msg import Kiwibot as kiwibot_msg
@@ -86,9 +88,21 @@ class VisualsNode(Thread, Node):
         # message type: planner_msg
         # callback:cb_path_planner
         # add here your solution
+        self.create_subscription(
+            planner_msg,
+            "/path_planner/msg",
+            self.cb_path_planner,
+            qos_profile=qos_profile_sensor_data,
+        )
 
         # ------------------------------------------
         # TODO: Implement the Kiwibot status subscriber,
+        self.create_subscription(
+            kiwibot_msg,
+            "/kiwibot/status",
+            self.cb_kiwibot_status,
+            qos_profile=qos_profile_sensor_data,
+        )
         # topic name: "/kiwibot/status"
         # message type: kiwibot_msg
         # callback:cb_kiwibot_status
@@ -103,13 +117,13 @@ class VisualsNode(Thread, Node):
 
         # Publisher for activating the routines
         # Uncomment
-        # self.msg_path_number = Int32()
-        # self.pub_start_routine = self.create_publisher(
-        #     msg_type=Int32,
-        #     topic="/graphics/start_routine",
-        #     qos_profile=1,
-        #     callback_group=self.callback_group,
-        # )
+        self.msg_path_number = Int32()
+        self.pub_start_routine = self.create_publisher(
+            msg_type=Int32,
+            topic="/graphics/start_routine",
+            qos_profile=1,
+            callback_group=self.callback_group,
+        )
 
         # ---------------------------------------------------------------------
         self.damon = True
@@ -305,7 +319,7 @@ class VisualsNode(Thread, Node):
             dsize=(cols, rows),
             flags=cv2.INTER_CUBIC,
         )
-    
+
     # TODO: Draw the robot
     def draw_robot(
         self, l_img: np.ndarray, s_img: np.ndarray, pos: tuple, transparency=1.0
@@ -343,10 +357,10 @@ class VisualsNode(Thread, Node):
         win_img, robot_coord = self.crop_map(coord=coord)
 
         # Draws robot in maps image
-        # if coord[0] and coord[1]:
-        #     win_img = self.draw_robot(
-        #         l_img=win_img, s_img=self._kiwibot_img, pos=robot_coord
-        #     )
+        if coord[0] and coord[1]:
+            win_img = self.draw_robot(
+                l_img=win_img, s_img=self._kiwibot_img, pos=robot_coord
+            )
 
         # Draw descriptions
         str_list = [
@@ -449,11 +463,11 @@ class VisualsNode(Thread, Node):
                     continue
                 # Key1=1048633 & Key9=1048625
                 elif key >= 49 and key <= 57:
-                    printlog(
-                        msg=f"Code is broken here",
-                        msg_type="WARN",
-                    )
-                    continue
+                    # printlog(
+                    #     msg=f"Code is broken here",
+                    #     msg_type="WARN",
+                    # )
+                    # continue
                     printlog(
                         msg=f"Routine {chr(key)} was sent to path planner node",
                         msg_type="INFO",
