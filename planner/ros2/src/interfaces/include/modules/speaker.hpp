@@ -84,7 +84,7 @@ private:
     * DEFINE THIS AMAZING PUBLISHER
     ********************************************/
 
-
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr m_done_pub;
 
     /********************************************
     * END CODE 

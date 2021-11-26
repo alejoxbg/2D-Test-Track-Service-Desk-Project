@@ -29,8 +29,10 @@ Speaker::Speaker(rclcpp::NodeOptions &options) : Node("speaker", "interfaces", o
     * DEFINE YOUR AMAZING SUBSCRIBER 
     * Find Documentation here:
     * https://docs.ros.org/en/foxy/Tutorials/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html#write-the-subscriber-node
+    *
     ********************************************/
-
+    m_speaker_sub = this->create_subscription<std_msgs::msg::Int8>(
+        "/device/speaker/command", std::bind(&Speaker::speakerCb,this,_1), rclcpp::QoS(rclcpp::SensorDataQoS()));
     /********************************************
     * END CODE 
 
