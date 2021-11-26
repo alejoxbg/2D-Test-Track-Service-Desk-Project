@@ -338,6 +338,30 @@ class VisualsNode(Thread, Node):
         # -----------------------------------------
         # Insert you solution here
 
+        bg_img = l_img.copy()
+        y = pos[1] - s_img.shape[1] // 2
+        x = pos[0] - s_img.shape[1] // 2
+        # Extract the alpha mask of the RGBA image, convert to RGB
+        b, g, r, a = cv2.split(s_img)
+        overlay_color = cv2.merge((b, g, r))
+
+        # Apply some simple filtering to remove edge noise
+        mask = cv2.medianBlur(a, 5)
+
+        h, w, _ = overlay_color.shape
+        roi = l_img[y : y + h, x : x + w]
+
+        # Black-out the area behind the logo in our original ROI
+        img1_bg = cv2.bitwise_and(roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
+
+        # Mask out the logo from the logo image.
+        img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
+
+        # Update the original image with our new ROI
+        l_img[y : y + h, x : x + w] = cv2.addWeighted(
+            img1_bg, 1.0, img2_fg, transparency, 0
+        )
+
         return l_img  # remove this line when implement your solution
 
         # -----------------------------------------
