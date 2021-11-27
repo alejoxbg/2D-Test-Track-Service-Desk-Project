@@ -295,6 +295,9 @@ RUN \
 
 # -----------------------------------------------------------------------------
 # Switch back to dialog for any ad-hoc use of apt-get
+
+RUN echo "source /opt/ros/galactic/setup.bash" >> /etc/bash.bashrc
+
 ENV DEBIAN_FRONTEND=
 CMD ["/bin/bash"]
 
