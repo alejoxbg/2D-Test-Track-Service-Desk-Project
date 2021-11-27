@@ -87,6 +87,8 @@ class VisualsNode(Thread, Node):
         # message type: planner_msg
         # callback:cb_path_planner
         # add here your solution
+
+        # create a subscription based on the publisher in path planner node, using it's qos
         self.create_subscription(
             planner_msg,
             "/path_planner/msg",
@@ -96,12 +98,15 @@ class VisualsNode(Thread, Node):
 
         # ------------------------------------------
         # TODO: Implement the Kiwibot status subscriber,
+
+        # create a subscription based on the publisher in kiwibot node, using it's qos
         self.create_subscription(
             kiwibot_msg,
             "/kiwibot/status",
             self.cb_kiwibot_status,
             qos_profile=qos_profile_sensor_data,
         )
+
         # topic name: "/kiwibot/status"
         # message type: kiwibot_msg
         # callback:cb_kiwibot_status
@@ -115,7 +120,7 @@ class VisualsNode(Thread, Node):
         # Publishers
 
         # Publisher for activating the routines
-        # Uncomment
+
         self.msg_path_number = Int32()
         self.pub_start_routine = self.create_publisher(
             msg_type=Int32,
@@ -337,7 +342,7 @@ class VisualsNode(Thread, Node):
         # -----------------------------------------
         # Insert you solution here
 
-        bg_img = l_img.copy()
+        # get the upper left corner position from where the robot will be drawn is obtained
         y = pos[1] - s_img.shape[1] // 2
         x = pos[0] - s_img.shape[1] // 2
 
@@ -357,12 +362,12 @@ class VisualsNode(Thread, Node):
         # Mask out the robot image from the robot image.
         img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
 
-        # Update the original image with our new ROI
+        # Update the original image with our new ROI, adding transparency
         l_img[y : y + h, x : x + w] = cv2.addWeighted(
             img1_bg, 1.0, img2_fg, transparency, 0
         )
 
-        return l_img  # remove this line when implement your solution
+        return l_img
 
         # -----------------------------------------
 
@@ -446,6 +451,12 @@ class VisualsNode(Thread, Node):
         # -----------------------------------------
         # Insert you solution here
 
+        # drawing every circle in the landmark using cv2.circle witch recives:
+        # img: the image to which the circle is to be drawn
+        # center: the coordinates of the center of the circle
+        # radius: the radius of the circle
+        # color: rgb color of the circle
+        # thickness: the thickness of the circle
         for pos in land_marks:
             cv2.circle(
                 img=self._win_background,

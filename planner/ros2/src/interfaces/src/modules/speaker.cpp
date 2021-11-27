@@ -31,6 +31,8 @@ Speaker::Speaker(rclcpp::NodeOptions &options) : Node("speaker", "interfaces", o
     * https://docs.ros.org/en/foxy/Tutorials/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html#write-the-subscriber-node
     *
     ********************************************/
+    // subscriber of type std_msgs,Int8, with topic /device/speaker/command,
+    // SensorDataQos (same as node_planner publisher) and with callback speakerCb.
     m_speaker_sub = this->create_subscription<std_msgs::msg::Int8>(
         "/device/speaker/command", rclcpp::QoS(rclcpp::SensorDataQoS()), std::bind(&Speaker::speakerCb,this,_1));
     /********************************************
@@ -104,7 +106,10 @@ void Speaker::speakerCb(const std_msgs::msg::Int8::SharedPtr msg)
         /********************************************
         * PLAY A DEFAULT SOUND IF NOT FOUND THE TRACK FILE
         ********************************************/
+        // the if above is executed if it finds the sound file
         else{
+            // the same instructions are used to execute the sound, 
+            // but the append is removed from the message, because we are going to play only track 2
             readfd = open((m_path + "2.wav").c_str(), O_RDONLY);
             status = pthread_create(&pthread_id, NULL, (THREADFUNCPTR)&Speaker::PlaySound, this);
         }
@@ -136,6 +141,8 @@ void *Speaker::PlaySound()
     * https://docs.ros.org/en/foxy/Tutorials/Writing-A-Simple-Cpp-Publisher-And-Subscriber.html#write-the-publisher-node
     ********************************************/
     std_msgs::msg::Bool::UniquePtr msg(new std_msgs::msg::Bool());
+
+    // The uniquePointer is assigned the value of false and this value is moved to publish it.
     msg->data = false;
     m_done_pub->publish(std::move(msg));
     /********************************************
@@ -163,6 +170,8 @@ void *Speaker::PlaySound()
     ********************************************/
     // This is just for clean the variable name and re-initialize it.
     msg.reset(new std_msgs::msg::Bool());
+
+    // The uniquePointer is assigned the value of true and this value is moved to publish it.
     msg->data = true;
     m_done_pub->publish(std::move(msg));
     

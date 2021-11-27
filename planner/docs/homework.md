@@ -2,7 +2,7 @@
 
 ---
 # THE SUPER HYPER POKE DIGI MEGA MUCHI-FANTASTIC FINAL PROJECT (2D-BASIC-PLANNER)
-NAME: **WRITE YOUR NAME HERE**
+NAME: ALEJANDRO NARANJO ZAPATA
 
 ---
 **INSTRUCTIONS**:
@@ -135,25 +135,49 @@ Respond below every questions:
 
 1. [Python] Why the robot's image gets distorted when is turning?
 
+In the trun_robot method of node node_visual_gui an affine geometric transformation is used, which has the particularity of leaving the parallel lines at the cost of distorting the image as you can see in this image, so when performing this process many times this distortion accumulates, there are other types of transformation that we can use in cv2 as a perspective transformation.
+
+![](https://opencv24-python-tutorials.readthedocs.io/en/stable/_images/affine.jpg)
+
 2. [Python] are Python packages compiled as C++ packages?
+
+No, the python packages in this project are built with python ament, which can only build python nodes, it is possible to use the cmake build type with python and C++ nodes, but in this project it is not, also python is an interpreted language, not compiled, unlike c++ which is compiled to be ready to be executed by machine code.
 
 3. [Python] Why with some code errors in some nodes the logs are not printed?
 
+There can be different reasons, for example, that the output parameter in the launcher is set to log instead of screen, which causes the logs to be saved in a file instead of being displayed on the screen, another can be that the flush parameter in the printlog instruction is set to False which causes nothing to be printed or that the buffer is constantly full by other prints for example and the message cannot be printed, because the flush parameter is not being used in true.
+
 4. [Control] What other turn or speed profile would you implement, why, and what are the benefits?
+
+One of the profiles that can work well is the s-curve, which is much smoother than the trapezoidal profile and avoids infinite acceleration between the change of phases, using the s-curve helps us to conserve the mechanical elements as it provides a smooth transition and not abrupt, also helps us to reduce control efforts and generate a more accurate trajectory.
 
 5. [C++] What is the mean of the number "15" used in the pthread_kill inside the destructor method?
 
+The pthread_kill() function sends the sig signal to thread, a thread in the same process as the caller. when value 15 is sent, the SIGTERM signal is sent and causes the entire process to finish.
+
 6. [C++] Why are we using UniquePointer instead of SharedPointers to publish a ROS2 message?
+
+SharedPointers are used when we are going to need multiple pointers to the same resource and UniquePointer is useful when we are only going to make one reference to it, the message we are publishing will only be accessed by speaker at a specific time and when we pass the information to the publisher, we do not need to access that information again so the smart pointer is responsible for cleaning that memory space.
 
 7. [C++] Why are we using a m_multi_sound variable? Explain ...
 
+The variable m_multi sound is used to control if multiple sounds are being played in the speaker node in line 83 and 84 the ambient sound is played and in the speakerCb function the sound that is requested through the topic /device/speaker/command is played, it is set to 0 to indicate that a new sound is going to be played simultaneously and then it is changed to 1 when the sound is finished playing.
+
 8. [C++] Why are we freeing the memory allocated by raw pointer "buff" variable and not freeing the memory allocated by the Shared and Unique Pointers? (HARD)
+
+Raw pointers are not like smart pointers, smart pointers take care of freeing the memory space themselves when it goes out of scope, while raw pointers are a pointer whose lifetime is not controlled by an encapsulated object and does not release its memory automatically, so we have to do it manually.
 
 10. [Docker] Explain with your own words what is the instructions `apt-get autoremove && apt-get clean -y for?`
 
+With autoremove you remove those missing packages, usually installed as dependencies of other installations, that are no longer needed and The apt-get clean command helps to clean the cache once you have installed packages using the apt-get install command on your system. It removes files that are no longer needed but still reside on your system and hold system space.
+
 11. [Docker] If you modify a layer what happen with the previous and the next ones?
 
+When you modify a layer, the cache of the previous ones is not modified, so there is no need for docker to build them again, only the modified layer and the subsequent ones are built.
+
 12. [Docker] Can we change the basic image (`FROM ubuntu:20.04`) from the docker file to another?
+
+No, you can't change the base image, mainly because ros galactic is only supported for ubuntu 20.04, so changing for example to ubuntu 18.04 we would have to change most of the dependencies to adapt it to work in that version.
 
 Next questions is after you finish the project, it doesn't give points but we really appreciate you feedback:
 * What do you think about this project? is it hard or enough? is it to complicated, is it well structure, explanations and instructions are clear?

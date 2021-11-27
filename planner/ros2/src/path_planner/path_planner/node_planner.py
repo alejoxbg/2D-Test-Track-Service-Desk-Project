@@ -481,24 +481,34 @@ class PlannerNode(Node):
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
 
+        # get the delta time to discretize the signal
         delta_time = time / n
+
+        # create a vector with all time steps
         time_step = []
         acum = 0.0
-
         for i in range(int(n)):
             time_step.append(acum)
             acum += delta_time
 
+        # lists with all positions and velocities for each
+        # time are created and initialized
         posx = [0.0] * len(time_step)
         posy = [0.0] * len(time_step)
-        posx[0] = src[0]
-        posy[0] = src[1]
         velx = [0.0] * len(time_step)
         vely = [0.0] * len(time_step)
 
+        # initializes the first position of the list with
+        # the position where the path begins
+        posx[0] = src[0]
+        posy[0] = src[1]
+
+        # the maximum velocity of the trapezoid is found for each of the axes
         vel_max_y = (src[1] - dst[1]) / (time - pt)
         vel_max_x = (src[0] - dst[0]) / (time - pt)
 
+        # position and velocity are calculated for each
+        # of the time intervals and for each of the stages
         for index in range(1, int(n)):
             if index * delta_time <= pt:
                 velx[index] = vel_max_x / n * index
@@ -516,6 +526,8 @@ class PlannerNode(Node):
                 posx[index] = posx[index - 1] - delta_time * velx[index - 1]
                 posy[index] = posy[index - 1] - delta_time * vely[index - 1]
 
+        # the waypoints are filled with the index of the position,
+        # the corresponding position with the time interval and the delta time
         for index in range(int(n)):
             way_points.append(
                 {
@@ -563,19 +575,26 @@ class PlannerNode(Node):
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
 
+        # get the delta time to discretize the signal
         delta_time = time / n
+
+        # create a vector with all time steps
         time_step = []
         acum = 0.0
-
         for i in range(int(n)):
             time_step.append(acum)
             acum += delta_time
 
+        # lists with the positions and velocities
+        # for each time are created and initialized
         pos = [0.0] * len(time_step)
         vel = [0.0] * len(time_step)
 
+        # the maximum velocity of the trapezoid is found for the turn
         vel_max = (pos[0] - dst) / (time - pt - delta_time)
 
+        # position and velocity are calculated for each
+        # of the time intervals and for each of the stages
         for index in range(1, int(n)):
             if index * delta_time <= pt:
                 vel[index] = vel_max / n * index
@@ -587,6 +606,8 @@ class PlannerNode(Node):
                 vel[index] = vel_max / n * index
                 pos[index] = pos[index - 1] - delta_time * vel[index - 1]
 
+        # the turn points are filled with the index of the position,
+        # the corresponding position with the time interval and the delta time
         for index in range(int(n)):
             turn_points.append(
                 {

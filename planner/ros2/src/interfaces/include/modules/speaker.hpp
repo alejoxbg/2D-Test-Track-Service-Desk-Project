@@ -84,6 +84,8 @@ private:
     * DEFINE THIS AMAZING PUBLISHER
     ********************************************/
 
+    // publisher of type sdt_msgs, bool. called m_done_pub, 
+    // to publish when a sound starts and ends.
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr m_done_pub;
 
     /********************************************
