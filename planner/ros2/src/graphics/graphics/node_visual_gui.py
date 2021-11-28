@@ -106,6 +106,8 @@ class VisualsNode(Thread, Node):
 
         self.routine_id = 0
         self.stage_distance = 0.0
+        self.tacometer_erase = 0.0
+        self.tacometer_counter = 0
         # ---------------------------------------------------------------------
         Thread.__init__(self)
         Node.__init__(self, node_name="visuals_node")
@@ -474,7 +476,6 @@ class VisualsNode(Thread, Node):
         )
         if self.routine_id != 0:
             write_csv(
-                self.routine_id,
                 round(self.msg_kiwibot.dist, 2),
                 round(self.msg_kiwibot.time, 2),
             )
@@ -505,7 +506,7 @@ class VisualsNode(Thread, Node):
             fontScale=0.4,
         )
 
-        tacometer = 0
+        self.tacometer = 0
 
         with open(
             "/workspace/planner/configs/kiwibot_history.csv",
@@ -515,11 +516,12 @@ class VisualsNode(Thread, Node):
             r = r.readlines()
             for lines in range(1, len(r)):
                 actual_line = r[lines].split(",")
-                tacometer += float(actual_line[3])
+                self.tacometer += float(actual_line[3])
+        self.tacometer = self.tacometer - self.tacometer_erase
 
         win_img = print_list_text(
             win_img,
-            [f"Tacometer: {round(tacometer,2)}m"],
+            [f"Tacometer: {round(self.tacometer,2)}m"],
             origin=(10, 250),
             color=(0, 0, 255),
             line_break=18,
@@ -611,6 +613,12 @@ class VisualsNode(Thread, Node):
 
                     self.pub_start_routine.publish(Int32(data=int(chr(key))))
                 else:
+                    if self.tacometer_counter == 0:
+                        self.tacometer_erase = self.tacometer
+                        self.tacometer_counter = 1
+                    else:
+                        self.tacometer_erase = 0
+                        self.tacometer_counter = 0
                     printlog(
                         msg=f"No action for key {chr(key)} -> {key}",
                         msg_type="WARN",
