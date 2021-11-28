@@ -55,7 +55,7 @@ class KiwibotNode(Node):
         Args:
         Returns:
         """
-
+        self.loops = 0
         # ---------------------------------------------------------------------
         Node.__init__(self, node_name="kiwibot_node")
 
@@ -183,15 +183,22 @@ class KiwibotNode(Node):
                 if self._FORWARE_PRINT_WAYPOINT:
                     printlog(msg=wp, msg_type="INFO")
 
-                # Updating robot status
-                abs_dist = (
-                    np.sqrt(
-                        pow(self.status.pos_x - wp.x, 2)
-                        + pow(self.status.pos_y - wp.y, 2)
+                if self.loops > 2:
+                    # Updating robot status
+                    abs_dist = (
+                        np.sqrt(
+                            pow(self.status.pos_x - wp.x, 2)
+                            + pow(self.status.pos_y - wp.y, 2)
+                        )
+                        * 0.00847619047
                     )
-                    * 0.00847619047
-                )
-                self.status.speed = abs_dist / wp.dt
+                else:
+                    abs_dist = 0
+                self.loops += 1
+                try:
+                    self.status.speed = abs_dist / wp.dt
+                except ZeroDivisionError:
+                    self.status.speed = 0.0
                 self.status.dist += abs_dist
 
                 self.status.pos_x = wp.x

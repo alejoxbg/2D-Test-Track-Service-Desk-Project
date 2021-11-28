@@ -214,6 +214,29 @@ class PlannerNode(Node):
             # Check that the routine in received exists in the routines list
             if msg.data in self.routines.keys():
 
+                message = (
+                    "-"
+                    + ","
+                    + "-"
+                    + "GTM"
+                    + "-"
+                    + ","
+                    + str(msg.data)
+                    + ","
+                    + "-"
+                    + ","
+                    + "-"
+                    + ","
+                    + "-"
+                    + "\n"
+                )
+
+                with open(
+                    "/workspace/planner/configs/kiwibot_history.csv",
+                    "a",
+                    encoding="utf-8",
+                ) as w:
+                    w.write(message)
                 # -------------------------------------------------------
                 # Read the waypoint or landmarks for the specified route
                 self.way_points = self.read_keypoints(
@@ -247,6 +270,7 @@ class PlannerNode(Node):
                     msg="setting the robot in origin",
                     msg_type="OKPURPLE",
                 )
+
                 self.robot_move_req.waypoints = [
                     Waypoint(
                         id=0,
@@ -350,6 +374,21 @@ class PlannerNode(Node):
                         msg=f"routine {msg.data} has finished",
                         msg_type="OKGREEN",
                     )
+                    with open(
+                        "/workspace/planner/configs/kiwibot_history.csv",
+                        "r",
+                        encoding="utf-8",
+                    ) as r:
+                        r = r.readlines()
+                        last_line = list(r[-1])
+                        last_line[-2] = "1"
+                        r[-1] = "".join(last_line)
+                        with open(
+                            "/workspace/planner/configs/kiwibot_history.csv",
+                            "w",
+                            encoding="utf-8",
+                        ) as w:
+                            w.writelines(r)
 
                 # -------------------------------------------------------
                 self.pub_speaker.publish(Int8(data=3))

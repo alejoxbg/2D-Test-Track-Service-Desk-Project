@@ -13,7 +13,8 @@ import cv2
 import copy
 import sys
 import os
-
+import time
+import datetime
 
 from threading import Thread, Event
 
@@ -49,6 +50,51 @@ def setProcessName(name: str) -> None:
         )
 
 
+def write_csv(total_distance: float, total_time: float):
+    """! [write a csv file with routine information]
+
+    @param total_distance (float) [Total distance travel]
+    @param total_time (float) [total travel time]
+    """
+
+    with open(
+        "/workspace/planner/configs/kiwibot_history.csv", "r", encoding="utf-8"
+    ) as r:
+        r = r.readlines()
+        last_line = r[-1].split(",")
+        msg = (
+            str(datetime.date.today())
+            + ","
+            + datetime.datetime.now().strftime("%H:%M:%S")
+            + "GTM"
+            + time.strftime("%z")
+            + ","
+            + last_line[2]
+            + ","
+            + str(total_distance)
+            + ","
+            + str(total_time)
+            + ","
+            + "0"
+            + "\n"
+        )
+        try:
+            if last_line[-1][-2] != "1":
+                r[-1] = msg
+                with open(
+                    "/workspace/planner/configs/kiwibot_history.csv",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.writelines(r)
+        except Exception:
+            r[-1] = msg
+            with open(
+                "/workspace/planner/configs/kiwibot_history.csv", "w", encoding="utf-8"
+            ) as w:
+                w.writelines(r)
+
+
 # =============================================================================
 class VisualsNode(Thread, Node):
     def __init__(self) -> None:
@@ -58,6 +104,8 @@ class VisualsNode(Thread, Node):
         Returns:
         """
 
+        self.routine_id = 0
+        self.stage_distance = 0.0
         # ---------------------------------------------------------------------
         Thread.__init__(self)
         Node.__init__(self, node_name="visuals_node")
@@ -424,13 +472,56 @@ class VisualsNode(Thread, Node):
             thickness=1,
             fontScale=0.4,
         )
+        if self.routine_id != 0:
+            write_csv(
+                self.routine_id,
+                round(self.msg_kiwibot.dist, 2),
+                round(self.msg_kiwibot.time, 2),
+            )
+        # calculate the porc of the total routine
+        if self.msg_kiwibot.dist >= self.msg_planner.distance:
+            self.max_distance = self.msg_kiwibot.dist
+        if self.stage_distance > 0:
+            distance = self.msg_kiwibot.dist - self.stage_distance
+        else:
+            distance = self.msg_kiwibot.dist
+        try:
+            porc = str(
+                round(
+                    distance / (self.msg_planner.distance - self.stage_distance) * 100,
+                    2,
+                )
+            )
+        except ZeroDivisionError:
+            porc = "0.00"
 
-        porc = "???"
         win_img = print_list_text(
             win_img,
             [f"Porc: {porc}%"],
             origin=(10, 200),
             color=(255, 0, 255),
+            line_break=18,
+            thickness=1,
+            fontScale=0.4,
+        )
+
+        tacometer = 0
+
+        with open(
+            "/workspace/planner/configs/kiwibot_history.csv",
+            "r",
+            encoding="utf-8",
+        ) as r:
+            r = r.readlines()
+            for lines in range(1, len(r)):
+                actual_line = r[lines].split(",")
+                tacometer += float(actual_line[3])
+
+        win_img = print_list_text(
+            win_img,
+            [f"Tacometer: {round(tacometer,2)}m"],
+            origin=(10, 250),
+            color=(0, 0, 255),
             line_break=18,
             thickness=1,
             fontScale=0.4,
@@ -511,10 +602,13 @@ class VisualsNode(Thread, Node):
                     #     msg_type="WARN",
                     # )
                     # continue
+                    self.stage_distance = self.max_distance
                     printlog(
                         msg=f"Routine {chr(key)} was sent to path planner node",
                         msg_type="INFO",
                     )
+                    self.routine_id = int(chr(key))
+
                     self.pub_start_routine.publish(Int32(data=int(chr(key))))
                 else:
                     printlog(
