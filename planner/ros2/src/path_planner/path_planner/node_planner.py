@@ -504,15 +504,15 @@ class PlannerNode(Node):
         posy[0] = src[1]
 
         # the maximum velocity of the trapezoid is found for each of the axes
-        vel_max_y = (src[1] - dst[1]) / (time - pt)
-        vel_max_x = (src[0] - dst[0]) / (time - pt)
+        vel_max_y = (src[1] - dst[1]) / (pt + (time - 2 * pt))
+        vel_max_x = (src[0] - dst[0]) / (pt + (time - 2 * pt))
 
         # position and velocity are calculated for each
         # of the time intervals and for each of the stages
         for index in range(1, int(n)):
             if index * delta_time <= pt:
-                velx[index] = vel_max_x / n * index
-                vely[index] = vel_max_y / n * index
+                velx[index] = time_step[index] / pt * vel_max_x
+                vely[index] = time_step[index] / pt * vel_max_y
                 posx[index] = posx[index - 1] - delta_time * velx[index - 1]
                 posy[index] = posy[index - 1] - delta_time * vely[index - 1]
             elif index * delta_time > pt and index * delta_time < time - pt:
@@ -521,8 +521,8 @@ class PlannerNode(Node):
                 posx[index] = posx[index - 1] - delta_time * velx[index]
                 posy[index] = posy[index - 1] - delta_time * vely[index]
             elif index * delta_time > time - pt:
-                velx[index] = vel_max_x / n * index
-                vely[index] = vel_max_y / n * index
+                velx[index] = (time - time_step[index]) / pt * vel_max_x
+                vely[index] = (time - time_step[index]) / pt * vel_max_y
                 posx[index] = posx[index - 1] - delta_time * velx[index - 1]
                 posy[index] = posy[index - 1] - delta_time * vely[index - 1]
 
@@ -591,19 +591,19 @@ class PlannerNode(Node):
         vel = [0.0] * len(time_step)
 
         # the maximum velocity of the trapezoid is found for the turn
-        vel_max = (pos[0] - dst) / (time - pt - delta_time)
+        vel_max = (pos[0] - dst) / (pt + (time - 2 * pt))
 
         # position and velocity are calculated for each
         # of the time intervals and for each of the stages
         for index in range(1, int(n)):
             if index * delta_time <= pt:
-                vel[index] = vel_max / n * index
+                vel[index] = time_step[index] / pt * vel_max
                 pos[index] = pos[index - 1] - delta_time * vel[index - 1]
             elif index * delta_time > pt and index * delta_time < time - pt:
                 vel[index] = vel_max
                 pos[index] = pos[index - 1] - delta_time * vel[index]
             elif index * delta_time > time - pt:
-                vel[index] = vel_max / n * index
+                vel[index] = (time - time_step[index]) / pt * vel_max
                 pos[index] = pos[index - 1] - delta_time * vel[index - 1]
 
         # the turn points are filled with the index of the position,
