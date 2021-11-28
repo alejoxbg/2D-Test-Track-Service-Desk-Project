@@ -108,6 +108,7 @@ class VisualsNode(Thread, Node):
         self.stage_distance = 0.0
         self.tacometer_erase = 0.0
         self.tacometer_counter = 0
+        self.angle_acum = 90.0
         printlog(msg=f"Press ENTER to erase o resume tacometer", msg_type="OKGREEN")
         printlog(msg=f"Press SPACEBAR to stop o resume execution", msg_type="OKGREEN")
         # ---------------------------------------------------------------------
@@ -129,6 +130,7 @@ class VisualsNode(Thread, Node):
 
         self._kiwibot_img_path = "/workspace/planner/media/images/kiwibot.png"
         self._kiwibot_img = cv2.imread(self._kiwibot_img_path, cv2.IMREAD_UNCHANGED)
+        self._original_kiwibot_img = self._kiwibot_img
 
         # ---------------------------------------------------------------------
         # Subscribers
@@ -361,16 +363,24 @@ class VisualsNode(Thread, Node):
         # Get image shape
         rows, cols, _ = self._kiwibot_img.shape
 
+        if heading_angle < 20:
+            self.angle_acum += heading_angle
+        elif (
+            heading_angle > self.angle_acum - 5 and heading_angle < self.angle_acum + 5
+        ):
+            self.angle_acum = heading_angle
+        printlog(heading_angle)
+        printlog(self.angle_acum)
         # Calculate translation and rotation matrix
         M = cv2.getRotationMatrix2D(
             center=(int(cols / 2), int(rows / 2)),
-            angle=(heading_angle),
+            angle=(self.angle_acum),
             scale=1,
         )
 
         # Rotate robots image
         self._kiwibot_img = cv2.warpAffine(
-            src=self._kiwibot_img,
+            src=self._original_kiwibot_img,
             M=M,
             dsize=(cols, rows),
             flags=cv2.INTER_CUBIC,
