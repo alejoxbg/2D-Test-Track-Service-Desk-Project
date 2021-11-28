@@ -108,6 +108,8 @@ class VisualsNode(Thread, Node):
         self.stage_distance = 0.0
         self.tacometer_erase = 0.0
         self.tacometer_counter = 0
+        printlog(msg=f"Press ENTER to erase o resume tacometer", msg_type="OKGREEN")
+        printlog(msg=f"Press SPACEBAR to stop o resume execution", msg_type="OKGREEN")
         # ---------------------------------------------------------------------
         Thread.__init__(self)
         Node.__init__(self, node_name="visuals_node")
@@ -615,13 +617,24 @@ class VisualsNode(Thread, Node):
                 elif key == 32:
                     self.pub_start_routine.publish(Int32(data=0))
                     self.stop = not self.stop
-                else:
+                elif key == 13:
                     if self.tacometer_counter == 0:
                         self.tacometer_erase = self.tacometer
                         self.tacometer_counter = 1
+                        printlog(
+                            msg=f"Tacometer clear",
+                            msg_type="OKGREEN",
+                        )
                     else:
                         self.tacometer_erase = 0
                         self.tacometer_counter = 0
+                        printlog(
+                            msg=f"Tacometer resumed",
+                            msg_type="OKGREEN",
+                        )
+
+                else:
+
                     printlog(
                         msg=f"No action for key {chr(key)} -> {key}",
                         msg_type="WARN",
