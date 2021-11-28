@@ -13,8 +13,14 @@ import cv2
 import copy
 import sys
 import os
+
+# =============================================================================
+# Added time an datetime libraries to get tame and date
+# to write them in the csv file
 import time
 import datetime
+
+# =============================================================================
 
 from threading import Thread, Event
 
@@ -50,13 +56,15 @@ def setProcessName(name: str) -> None:
         )
 
 
+# =============================================================================
+# function to write the csv file during execution
 def write_csv(total_distance: float, total_time: float):
     """! [write a csv file with routine information]
 
     @param total_distance (float) [Total distance travel]
     @param total_time (float) [total travel time]
     """
-
+    # Read the csv file
     with open(
         "/workspace/planner/configs/kiwibot_history.csv", "r", encoding="utf-8"
     ) as r:
@@ -79,6 +87,7 @@ def write_csv(total_distance: float, total_time: float):
             + "\n"
         )
         try:
+            # Check if the routine has been completed to stop overwriting
             if last_line[-1][-2] != "1":
                 r[-1] = msg
                 with open(
@@ -96,6 +105,23 @@ def write_csv(total_distance: float, total_time: float):
 
 
 # =============================================================================
+# Function to get the total distance of the csv file
+def total_distance():
+    tacometer = 0.0
+    with open(
+        "/workspace/planner/configs/kiwibot_history.csv",
+        "r",
+        encoding="utf-8",
+    ) as r:
+        r = r.readlines()
+        for lines in range(1, len(r)):
+            actual_line = r[lines].split(",")
+            # Accumulate all distances
+            tacometer += float(actual_line[3])
+    return tacometer
+
+
+# =============================================================================
 class VisualsNode(Thread, Node):
     def __init__(self) -> None:
         """
@@ -103,14 +129,17 @@ class VisualsNode(Thread, Node):
         Args:
         Returns:
         """
+        # =============================================================================
+        # Some control variables for stop, tacometer, angle, routine, and distance
         self.stop = False
         self.routine_id = 0
         self.stage_distance = 0.0
         self.tacometer_erase = 0.0
-        self.tacometer_counter = 0
+        self.tacometer_counter = True
         self.angle_acum = 90.0
         printlog(msg=f"Press ENTER to erase o resume tacometer", msg_type="OKGREEN")
         printlog(msg=f"Press SPACEBAR to stop o resume execution", msg_type="OKGREEN")
+        # =============================================================================
         # ---------------------------------------------------------------------
         Thread.__init__(self)
         Node.__init__(self, node_name="visuals_node")
@@ -130,7 +159,9 @@ class VisualsNode(Thread, Node):
 
         self._kiwibot_img_path = "/workspace/planner/media/images/kiwibot.png"
         self._kiwibot_img = cv2.imread(self._kiwibot_img_path, cv2.IMREAD_UNCHANGED)
+        # =============================================================================
         self._original_kiwibot_img = self._kiwibot_img
+        # =============================================================================
 
         # ---------------------------------------------------------------------
         # Subscribers
@@ -363,15 +394,18 @@ class VisualsNode(Thread, Node):
         # Get image shape
         rows, cols, _ = self._kiwibot_img.shape
 
+        # =============================================================================
+        # Accumulating and correcting the angle of rotation
         if heading_angle < 20:
             self.angle_acum += heading_angle
         elif (
             heading_angle > self.angle_acum - 5 and heading_angle < self.angle_acum + 5
         ):
             self.angle_acum = heading_angle
-        printlog(heading_angle)
-        printlog(self.angle_acum)
+        # =============================================================================
+
         # Calculate translation and rotation matrix
+        # Angle changed to an absolute angle
         M = cv2.getRotationMatrix2D(
             center=(int(cols / 2), int(rows / 2)),
             angle=(self.angle_acum),
@@ -379,6 +413,7 @@ class VisualsNode(Thread, Node):
         )
 
         # Rotate robots image
+        # Rotating only the original image
         self._kiwibot_img = cv2.warpAffine(
             src=self._original_kiwibot_img,
             M=M,
@@ -486,27 +521,36 @@ class VisualsNode(Thread, Node):
             thickness=1,
             fontScale=0.4,
         )
+        # =============================================================================
+        # verify if there is any routine active to actualice the csv file
         if self.routine_id != 0:
             write_csv(
                 round(self.msg_kiwibot.dist, 2),
                 round(self.msg_kiwibot.time, 2),
             )
-        # calculate the porc of the total routine
+        # =============================================================================
+        # Calculate the pergentage of the total routine only if there's
+        # A routine active
         if self.msg_kiwibot.dist >= self.msg_planner.distance:
+            # Actualice the distance of the accumulated stages
             self.max_distance = self.msg_kiwibot.dist
         if self.stage_distance > 0:
+            # Get the actual distance of the stage
             distance = self.msg_kiwibot.dist - self.stage_distance
         else:
             distance = self.msg_kiwibot.dist
         try:
+            # calculate the percentage
             porc = str(
                 round(
                     distance / (self.msg_planner.distance - self.stage_distance) * 100,
                     2,
                 )
             )
+        # If the robot has not moved the percentage is 0
         except ZeroDivisionError:
             porc = "0.00"
+        # =============================================================================
 
         win_img = print_list_text(
             win_img,
@@ -517,29 +561,24 @@ class VisualsNode(Thread, Node):
             thickness=1,
             fontScale=0.4,
         )
+        # =============================================================================
+        # Tacometer calculations
+        if self.tacometer_counter:
+            tacometer = total_distance()
+        else:
+            tacometer = total_distance() - self.tacometer_erase
 
-        self.tacometer = 0
-
-        with open(
-            "/workspace/planner/configs/kiwibot_history.csv",
-            "r",
-            encoding="utf-8",
-        ) as r:
-            r = r.readlines()
-            for lines in range(1, len(r)):
-                actual_line = r[lines].split(",")
-                self.tacometer += float(actual_line[3])
-        self.tacometer = self.tacometer - self.tacometer_erase
-
+        # Print tacometer in the screen
         win_img = print_list_text(
             win_img,
-            [f"Tacometer: {round(self.tacometer,2)}m"],
+            [f"Tacometer: {round(tacometer,2)}m"],
             origin=(10, 250),
             color=(0, 0, 255),
             line_break=18,
             thickness=1,
             fontScale=0.4,
         )
+        # =============================================================================
 
         return win_img
 
@@ -616,33 +655,45 @@ class VisualsNode(Thread, Node):
                     #     msg_type="WARN",
                     # )
                     # continue
-                    self.stage_distance = self.max_distance
+
                     printlog(
                         msg=f"Routine {chr(key)} was sent to path planner node",
                         msg_type="INFO",
                     )
+
+                    # =============================================================================
+                    # Actualice control variables
                     self.routine_id = int(chr(key))
+                    self.stage_distance = self.max_distance
+                    # =============================================================================
 
                     self.pub_start_routine.publish(Int32(data=int(chr(key))))
+
+                # =============================================================================
+                #
                 elif key == 32:
                     self.pub_start_routine.publish(Int32(data=0))
                     self.stop = not self.stop
+                # If enter is pressed it check if the tacometer is cleared before or not
                 elif key == 13:
-                    if self.tacometer_counter == 0:
-                        self.tacometer_erase = self.tacometer
-                        self.tacometer_counter = 1
+                    # If is the first time pressed actualice self.tacometer_erase
+                    if self.tacometer_counter == True:
+                        self.tacometer_erase = total_distance()
+                        self.tacometer_counter = not self.tacometer_counter
                         printlog(
                             msg=f"Tacometer clear",
                             msg_type="OKGREEN",
                         )
+                    # If is the second time pressed enter, clean self.tacometer_erase
+                    # To restore tacometer
                     else:
                         self.tacometer_erase = 0
-                        self.tacometer_counter = 0
+                        self.tacometer_counter = not self.tacometer_counter
                         printlog(
                             msg=f"Tacometer resumed",
                             msg_type="OKGREEN",
                         )
-
+                # =============================================================================
                 else:
 
                     printlog(

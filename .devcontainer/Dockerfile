@@ -296,7 +296,10 @@ RUN \
 # -----------------------------------------------------------------------------
 # Switch back to dialog for any ad-hoc use of apt-get
 
+# -----------------------------------------------------------------------------
+# Addede the source to ROS2 to bashrc file
 RUN echo "source /opt/ros/galactic/setup.bash" >> /etc/bash.bashrc
+# -----------------------------------------------------------------------------
 
 ENV DEBIAN_FRONTEND=
 CMD ["/bin/bash"]

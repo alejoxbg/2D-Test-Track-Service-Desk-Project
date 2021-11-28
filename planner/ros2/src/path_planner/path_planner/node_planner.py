@@ -36,8 +36,6 @@ from usr_msgs.msg import Kiwibot
 from usr_srvs.srv import Move
 from usr_srvs.srv import Turn
 
-last_pos = 0
-
 # =============================================================================
 def setProcessName(name: str) -> None:
     """!
@@ -81,7 +79,12 @@ class PlannerNode(Node):
         Args:
         Returns:
         """
+
+        # =============================================================================
+        # Stop variable control
         self.stop = False
+        # =============================================================================
+
         # ---------------------------------------------------------------------
         Node.__init__(self, node_name="planner_node")
 
@@ -204,6 +207,8 @@ class PlannerNode(Node):
         """
 
         try:
+            # =============================================================================
+            # Detecting and changing self.stop to stop the process
             if msg.data == 0:
                 self.stop = not self.stop
                 if self.stop == True:
@@ -211,6 +216,8 @@ class PlannerNode(Node):
                 elif self.stop == False:
                     printlog(msg="Execution resumed", msg_type="WARN")
                 return
+            # =============================================================================
+
             if self._in_execution:
                 printlog(msg="There's already a routine in execution", msg_type="WARN")
                 return
@@ -220,6 +227,8 @@ class PlannerNode(Node):
             # Check that the routine in received exists in the routines list
             if msg.data in self.routines.keys():
 
+                # =============================================================================
+                # Write a new line in the csv file when a new routine started
                 message = (
                     "-"
                     + ","
@@ -243,6 +252,8 @@ class PlannerNode(Node):
                     encoding="utf-8",
                 ) as w:
                     w.write(message)
+                # =============================================================================
+
                 # -------------------------------------------------------
                 # Read the waypoint or landmarks for the specified route
                 self.way_points = self.read_keypoints(
@@ -314,8 +325,7 @@ class PlannerNode(Node):
                         dang -= 360
                     elif dang < -180:
                         dang += 360
-                    while self.stop:
-                        pass
+
                     if int(dang):
 
                         printlog(
@@ -338,8 +348,6 @@ class PlannerNode(Node):
                                 n=self._TURN_CRTL_POINTS,
                             )
                         ]
-                        while self.stop:
-                            pass
 
                         move_resp = self.cli_robot_turn.call(self.robot_turn_req)
 
@@ -369,8 +377,6 @@ class PlannerNode(Node):
                         )
                         for wp in seg_way_points
                     ]
-                    while self.stop:
-                        pass
                     move_resp = self.cli_robot_move.call(self.robot_move_req)
 
                 # -------------------------------------------------------
@@ -384,6 +390,8 @@ class PlannerNode(Node):
                         msg=f"routine {msg.data} has finished",
                         msg_type="OKGREEN",
                     )
+                    # =============================================================================
+                    # When the routine is over, writes a 1 in the las character
                     with open(
                         "/workspace/planner/configs/kiwibot_history.csv",
                         "r",
@@ -399,6 +407,7 @@ class PlannerNode(Node):
                             encoding="utf-8",
                         ) as w:
                             w.writelines(r)
+                    # =============================================================================
 
                 # -------------------------------------------------------
                 self.pub_speaker.publish(Int8(data=3))
@@ -530,7 +539,7 @@ class PlannerNode(Node):
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
 
-        # get the delta time to discretize the signal
+        # get the delta time to discretice the signal
         delta_time = time / n
 
         # create a vector with all time steps
@@ -616,7 +625,7 @@ class PlannerNode(Node):
 
         # ---------------------------------------------------------------------
         # TODO: Trapezoidal turn profile
-        # Add your solution here, remeber that every element in the list is a dictionary
+        # Add your solution here, remember that every element in the list is a dictionary
         # where every element in has the next structure and data type:
         # "idx": [int](index of the waypoint),
         # "a": [float](yaw angle of the robot),
@@ -624,7 +633,7 @@ class PlannerNode(Node):
         # "dt": [float](sept of time for angle a, is constant element)
         # Do not forget and respect the keys names
 
-        # get the delta time to discretize the signal
+        # get the delta time to discretice the signal
         delta_time = time / n
 
         # create a vector with all time steps

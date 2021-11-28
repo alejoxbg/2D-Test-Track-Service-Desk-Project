@@ -135,7 +135,7 @@ Respond below every questions:
 
 1. [Python] Why the robot's image gets distorted when is turning?
 
-In the trun_robot method of node node_visual_gui an affine geometric transformation is used, which has the particularity of leaving the parallel lines at the cost of distorting the image as you can see in this image, so when performing this process many times this distortion accumulates, there are other types of transformation that we can use in cv2 as a perspective transformation.
+In the trun_robot method of node node_visual_gui an affine geometric transformation is used, which has the particularity of leaving the parallel lines at the cost of distorting the image as you can see in this image, so when performing this process many times this distortion accumulates, there are other types of transformation that we can use in cv2 as a perspective transformation or just use the original image unmodified just as I did for the extra task.
 
 ![](https://opencv24-python-tutorials.readthedocs.io/en/stable/_images/affine.jpg)
 
@@ -181,6 +181,8 @@ No, you can't change the base image, mainly because ros galactic is only support
 
 Next questions is after you finish the project, it doesn't give points but we really appreciate you feedback:
 * What do you think about this project? is it hard or enough? is it to complicated, is it well structure, explanations and instructions are clear?
+
+I really enjoyed this project, especially the extra task, it was quite fun and challenging, I learned a lot doing it, for me it was well timed and difficult enough, it needs a little clarity on what we can manipulate in the code, otherwise I thought it was excellent.
 
 ---
 <!-- ---------------------------------------------------------------------- -->

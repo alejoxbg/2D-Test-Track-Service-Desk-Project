@@ -24,7 +24,11 @@ from rclpy.node import Node
 from usr_srvs.srv import Move
 from usr_srvs.srv import Turn
 
+# =============================================================================
+# Added a subscription with Int32 msg
 from std_msgs.msg import Int32
+
+# =============================================================================
 from std_msgs.msg import Int8
 
 from usr_msgs.msg import Kiwibot as kiwibot_status
@@ -56,8 +60,12 @@ class KiwibotNode(Node):
         Args:
         Returns:
         """
+        # =============================================================================
+        # Some control variables to stop and start sending the distance
         self.loops = 0
         self.stop = False
+        # =============================================================================
+
         # ---------------------------------------------------------------------
         Node.__init__(self, node_name="kiwibot_node")
 
@@ -84,7 +92,10 @@ class KiwibotNode(Node):
             bool moving     # Robot is moving
         """
         # ---------------------------------------------------------------------
-        # Sbuscribers
+        # =============================================================================
+        # Subscribers
+        # Added a subscriber to topic "/graphics/start_routine"
+        # Int32 message type and self.stop_routine callback
         self.stop_routine_sub = self.create_subscription(
             msg_type=Int32,
             topic="/graphics/start_routine",
@@ -92,6 +103,7 @@ class KiwibotNode(Node):
             qos_profile=qos_profile_sensor_data,
             callback_group=self.callback_group,
         )
+        # =============================================================================
 
         # ---------------------------------------------------------------------
         # Publishers
@@ -128,6 +140,8 @@ class KiwibotNode(Node):
             callback_group=self.callback_group,
         )
 
+    # =============================================================================
+    # Stop routine method
     def stop_routine(self, msg: Int32) -> None:
         """
             Callback when a routine is stopped
@@ -135,9 +149,12 @@ class KiwibotNode(Node):
             msg: `Int32` stop routine or not
         Returns:
         """
+        # Change stop variable if it's sent 0
         if msg.data == 0:
             self.stop = not self.stop
             printlog()
+
+    # =============================================================================
 
     def cb_srv_robot_turn(self, request, response) -> Turn:
         """
@@ -207,7 +224,9 @@ class KiwibotNode(Node):
 
                 if self._FORWARE_PRINT_WAYPOINT:
                     printlog(msg=wp, msg_type="INFO")
-
+                # =============================================================================
+                # Fixing distance, did not start at 0, so it waits
+                # a few cycles to send the information.
                 if self.loops > 2:
                     # Updating robot status
                     abs_dist = (
@@ -220,12 +239,14 @@ class KiwibotNode(Node):
                 else:
                     abs_dist = 0
                 self.loops += 1
+
+                # Catch the error when it starts at 0
                 try:
                     self.status.speed = abs_dist / wp.dt
                 except ZeroDivisionError:
                     self.status.speed = 0.0
                 self.status.dist += abs_dist
-
+                # =============================================================================
                 self.status.pos_x = wp.x
                 self.status.pos_y = wp.y
                 self.status.moving = True
