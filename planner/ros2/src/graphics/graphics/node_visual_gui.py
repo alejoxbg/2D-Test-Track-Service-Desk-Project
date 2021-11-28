@@ -103,7 +103,7 @@ class VisualsNode(Thread, Node):
         Args:
         Returns:
         """
-
+        self.stop = False
         self.routine_id = 0
         self.stage_distance = 0.0
         self.tacometer_erase = 0.0
@@ -612,6 +612,9 @@ class VisualsNode(Thread, Node):
                     self.routine_id = int(chr(key))
 
                     self.pub_start_routine.publish(Int32(data=int(chr(key))))
+                elif key == 32:
+                    self.pub_start_routine.publish(Int32(data=0))
+                    self.stop = not self.stop
                 else:
                     if self.tacometer_counter == 0:
                         self.tacometer_erase = self.tacometer

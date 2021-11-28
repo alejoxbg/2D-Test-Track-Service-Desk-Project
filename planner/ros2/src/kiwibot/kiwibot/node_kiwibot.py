@@ -24,6 +24,7 @@ from rclpy.node import Node
 from usr_srvs.srv import Move
 from usr_srvs.srv import Turn
 
+from std_msgs.msg import Int32
 from std_msgs.msg import Int8
 
 from usr_msgs.msg import Kiwibot as kiwibot_status
@@ -56,6 +57,7 @@ class KiwibotNode(Node):
         Returns:
         """
         self.loops = 0
+        self.stop = False
         # ---------------------------------------------------------------------
         Node.__init__(self, node_name="kiwibot_node")
 
@@ -81,6 +83,15 @@ class KiwibotNode(Node):
             float32 yaw     # time since robot is moving
             bool moving     # Robot is moving
         """
+        # ---------------------------------------------------------------------
+        # Sbuscribers
+        self.stop_routine_sub = self.create_subscription(
+            msg_type=Int32,
+            topic="/graphics/start_routine",
+            callback=self.stop_routine,
+            qos_profile=qos_profile_sensor_data,
+            callback_group=self.callback_group,
+        )
 
         # ---------------------------------------------------------------------
         # Publishers
@@ -117,6 +128,17 @@ class KiwibotNode(Node):
             callback_group=self.callback_group,
         )
 
+    def stop_routine(self, msg: Int32) -> None:
+        """
+            Callback when a routine is stopped
+        Args:
+            msg: `Int32` stop routine or not
+        Returns:
+        """
+        if msg.data == 0:
+            self.stop = not self.stop
+            printlog()
+
     def cb_srv_robot_turn(self, request, response) -> Turn:
         """
             Callback to update kiwibot state information when turning
@@ -132,7 +154,8 @@ class KiwibotNode(Node):
         try:
 
             for idx, turn_ref in enumerate(request.turn_ref[:-1]):
-
+                while self.stop:
+                    pass
                 if self._TURN_PRINT_WAYPOINT:
                     printlog(msg=turn_ref, msg_type="INFO")
 
@@ -179,6 +202,8 @@ class KiwibotNode(Node):
 
         try:
             for wp in request.waypoints:
+                while self.stop:
+                    pass
 
                 if self._FORWARE_PRINT_WAYPOINT:
                     printlog(msg=wp, msg_type="INFO")

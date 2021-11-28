@@ -81,7 +81,7 @@ class PlannerNode(Node):
         Args:
         Returns:
         """
-
+        self.stop = False
         # ---------------------------------------------------------------------
         Node.__init__(self, node_name="planner_node")
 
@@ -204,7 +204,13 @@ class PlannerNode(Node):
         """
 
         try:
-
+            if msg.data == 0:
+                self.stop = not self.stop
+                if self.stop == True:
+                    printlog(msg="Execution paused", msg_type="WARN")
+                elif self.stop == False:
+                    printlog(msg="Execution resumed", msg_type="WARN")
+                return
             if self._in_execution:
                 printlog(msg="There's already a routine in execution", msg_type="WARN")
                 return
@@ -308,7 +314,8 @@ class PlannerNode(Node):
                         dang -= 360
                     elif dang < -180:
                         dang += 360
-
+                    while self.stop:
+                        pass
                     if int(dang):
 
                         printlog(
@@ -331,6 +338,8 @@ class PlannerNode(Node):
                                 n=self._TURN_CRTL_POINTS,
                             )
                         ]
+                        while self.stop:
+                            pass
 
                         move_resp = self.cli_robot_turn.call(self.robot_turn_req)
 
@@ -360,7 +369,8 @@ class PlannerNode(Node):
                         )
                         for wp in seg_way_points
                     ]
-
+                    while self.stop:
+                        pass
                     move_resp = self.cli_robot_move.call(self.robot_move_req)
 
                 # -------------------------------------------------------
