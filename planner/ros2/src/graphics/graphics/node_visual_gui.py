@@ -130,10 +130,11 @@ class VisualsNode(Thread, Node):
         Returns:
         """
         # =============================================================================
-        # Some control variables for stop, tacometer, angle, routine, and distance
+        # Some control variables for stop, tacometer, angle, routine, distance and time
         self.stop = False
         self.routine_id = 0
         self.stage_distance = 0.0
+        self.stage_time = 0.0
         self.tacometer_erase = 0.0
         self.tacometer_counter = True
         self.angle_acum = 90.0
@@ -516,6 +517,15 @@ class VisualsNode(Thread, Node):
             fontScale=0.4,
         )
 
+        if self.msg_kiwibot.time >= self.msg_planner.duration:
+            # Actualice the distance of the accumulated stages
+            self.max_time = self.msg_kiwibot.time
+        if self.stage_time > 0:
+            # Get the actual time of the stage
+            time = self.msg_kiwibot.time - self.stage_time
+        else:
+            time = self.msg_kiwibot.time
+        # =============================================================================
         # Calculate the pergentage of the total routine only if there's
         # A routine active
         if self.msg_kiwibot.dist >= self.msg_planner.distance:
@@ -553,7 +563,7 @@ class VisualsNode(Thread, Node):
         if self.routine_id != 0:
             write_csv(
                 round(distance, 2),
-                round(self.msg_kiwibot.time, 2),
+                round(time, 2),
             )
         # =============================================================================
         # =============================================================================
@@ -659,6 +669,7 @@ class VisualsNode(Thread, Node):
                     # =============================================================================
                     # Actualice control variables
                     self.routine_id = int(chr(key))
+                    self.stage_time = self.max_time
                     self.stage_distance = self.max_distance
                     # =============================================================================
 

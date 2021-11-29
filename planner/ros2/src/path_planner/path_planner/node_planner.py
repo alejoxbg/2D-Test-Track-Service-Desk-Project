@@ -316,7 +316,6 @@ class PlannerNode(Node):
                     )
                     ang = np.rad2deg(np.arctan2(dy, dx))
                     dang = ang - self.kiwibot_state.yaw
-                    printlog(dang)
                     if abs(dang) < -360:
                         dang += 360
                     elif dang > 360:
@@ -325,7 +324,6 @@ class PlannerNode(Node):
                         dang -= 360
                     elif dang < -180:
                         dang += 360
-                    printlog(dang)
                     if int(dang):
 
                         printlog(

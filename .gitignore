@@ -137,3 +137,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# csv file
+planner/configs/kiwibot_history.csv
