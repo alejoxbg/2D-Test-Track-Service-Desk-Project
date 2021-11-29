@@ -273,14 +273,8 @@ class VisualsNode(Thread, Node):
         try:
             # rotate robot's image
             if self.msg_kiwibot.yaw != msg.yaw:
-                if not int((msg.yaw - int(msg.yaw)) * 100):
-                    self._kiwibot_img = cv2.imread(
-                        self._kiwibot_img_path, cv2.IMREAD_UNCHANGED
-                    )
-                    self.turn_robot(heading_angle=msg.yaw)
-                else:
-                    move_angle = msg.yaw - self.msg_kiwibot.yaw
-                    self.turn_robot(heading_angle=move_angle)
+                move_angle = msg.yaw - self.msg_kiwibot.yaw
+                self.turn_robot(heading_angle=move_angle)
 
             self.msg_kiwibot = msg
 
