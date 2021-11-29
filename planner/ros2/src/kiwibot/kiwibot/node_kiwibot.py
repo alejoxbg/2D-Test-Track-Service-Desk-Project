@@ -61,8 +61,7 @@ class KiwibotNode(Node):
         Returns:
         """
         # =============================================================================
-        # Some control variables to stop and start sending the distance
-        self.loops = 0
+        # control variable to stop and start
         self.stop = False
         # =============================================================================
 
@@ -227,19 +226,17 @@ class KiwibotNode(Node):
                 # =============================================================================
                 # Fixing distance, did not start at 0, so it waits
                 # a few cycles to send the information.
-                if self.loops > 2:
-                    # Updating robot status
-                    abs_dist = (
-                        np.sqrt(
-                            pow(self.status.pos_x - wp.x, 2)
-                            + pow(self.status.pos_y - wp.y, 2)
-                        )
-                        * 0.00847619047
-                    )
-                else:
-                    abs_dist = 0
-                self.loops += 1
 
+                # Updating robot status
+                abs_dist = (
+                    np.sqrt(
+                        pow(self.status.pos_x - wp.x, 2)
+                        + pow(self.status.pos_y - wp.y, 2)
+                    )
+                    * 0.00847619047
+                )
+                if abs_dist > 3:
+                    abs_dist = 0
                 # Catch the error when it starts at 0
                 try:
                     self.status.speed = abs_dist / wp.dt

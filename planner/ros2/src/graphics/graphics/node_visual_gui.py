@@ -521,14 +521,7 @@ class VisualsNode(Thread, Node):
             thickness=1,
             fontScale=0.4,
         )
-        # =============================================================================
-        # verify if there is any routine active to actualice the csv file
-        if self.routine_id != 0:
-            write_csv(
-                round(self.msg_kiwibot.dist, 2),
-                round(self.msg_kiwibot.time, 2),
-            )
-        # =============================================================================
+
         # Calculate the pergentage of the total routine only if there's
         # A routine active
         if self.msg_kiwibot.dist >= self.msg_planner.distance:
@@ -561,6 +554,14 @@ class VisualsNode(Thread, Node):
             thickness=1,
             fontScale=0.4,
         )
+        # =============================================================================
+        # verify if there is any routine active to actualice the csv file
+        if self.routine_id != 0:
+            write_csv(
+                round(distance, 2),
+                round(self.msg_kiwibot.time, 2),
+            )
+        # =============================================================================
         # =============================================================================
         # Tacometer calculations
         if self.tacometer_counter:
